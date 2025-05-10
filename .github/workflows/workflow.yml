@@ -12,6 +12,5 @@ jobs:
       - name: Autenticando o usuário no Docker
         uses: docker/login-action@v2.0.0
         with:
-        env: user
           username: ${{secrets.USER}}
           password: ${{secrets.PASS}}
