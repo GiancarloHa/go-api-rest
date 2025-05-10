@@ -7,8 +7,8 @@ jobs:
     name: Docker Job
     runs-on: ubuntu-latest
     steps:
-    - name: Docker Login
-      uses: docker/login-action@v3.4.0
-      with:
-        username: ${{secrets.USER}}
-        password: ${{secrets.PASS}}
+      - name: Docker Login
+        uses: docker/login-action@v3.4.0
+        with:
+          username: ${{secrets.USER}}
+          password: ${{secrets.PASS}}
