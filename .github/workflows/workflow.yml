@@ -1,0 +1,14 @@
+name: Workflow
+
+on: push
+
+jobs:
+  docker:
+    name: Docker Job
+    runs-on: ubuntu-latest
+    steps:
+    - name: Docker Login
+      uses: docker/login-action@v3.4.0
+      with:
+        username: ${{secrets.user}}
+        password: ${{secrets.pass}}
