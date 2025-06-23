@@ -9,8 +9,13 @@ import (
 
 	"github.com/giancarloha/go-rest-api/database"
 	"github.com/giancarloha/go-rest-api/models"
-	"github.com/gorilla/mux"
 )
+
+func enableCORS(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*") // Replace with your allowed origin
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+}
 
 func Home(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
@@ -22,6 +27,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func TodosMangas(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w)
 	if r.Method == http.MethodGet {
 		var m []models.Manga
 		database.DB.Find(&m)
@@ -33,13 +39,37 @@ func TodosMangas(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func RetornaUmManga(w http.ResponseWriter, r *http.Request) {
-	urlid := r.URL.Query().Get("id")
-	fmt.Println(urlid)
-	vars := mux.Vars(r)
-	id := vars["id"]
-	var manga models.Manga
+func TodosMangasMes(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w)
+	if r.Method == http.MethodGet {
+		mes := r.PathValue("mes")
+		ano := r.PathValue("ano")
+		var mangas []models.Manga
 
+		database.DB.Where("anopub = ? AND mespub = ?", ano, mes).Find(&mangas)
+		json.NewEncoder(w).Encode(mangas)
+	}
+}
+
+func MangaOperations(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w)
+
+	id := r.PathValue("id")
+
+	switch r.Method {
+	case http.MethodGet:
+		RetornaUmManga(w, r, id)
+	case http.MethodDelete:
+		DeleteManga(w, r, id)
+	case http.MethodPut, http.MethodPatch:
+		EditManga(w, r, id)
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func RetornaUmManga(w http.ResponseWriter, r *http.Request, id string) {
+	var manga models.Manga
 	database.DB.First(&manga, id)
 	json.NewEncoder(w).Encode(manga)
 }
@@ -90,17 +120,16 @@ func AddManga(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(novoManga)
 }
 
-func DeleteManga(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
+func DeleteManga(w http.ResponseWriter, r *http.Request, id string) {
 	var manga models.Manga
+	json.NewDecoder(r.Body).Decode(&manga)
 	database.DB.Delete(&manga, id)
+	w.WriteHeader(http.StatusNoContent)
 	json.NewEncoder(w).Encode(manga)
+
 }
 
-func EditManga(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
+func EditManga(w http.ResponseWriter, r *http.Request, id string) {
 	var manga models.Manga
 	database.DB.First(&manga, id)
 	json.NewDecoder(r.Body).Decode(&manga)
